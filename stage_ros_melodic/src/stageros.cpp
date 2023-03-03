@@ -115,6 +115,7 @@ private:
 
     ros::Publisher clock_pub_;
 
+    bool isClockPub;
     bool isDepthCanonical;
     bool use_model_names;
 
@@ -322,6 +323,9 @@ StageNode::StageNode(int argc, char** argv, bool gui, const char* fname, bool us
     if(!localn.getParam("is_depth_canonical", isDepthCanonical))
         isDepthCanonical = true;
 
+    if(!localn.getParam("is_clock_published", isClockPub))
+        isClockPub = true;
+
 
     // We'll check the existence of the world file, because libstage doesn't
     // expose its failure to open it.  Could go further with checks (e.g., is
@@ -428,7 +432,9 @@ StageNode::SubscribeModels()
 
         this->robotmodels_.push_back(new_robot);
     }
-    clock_pub_ = n_.advertise<rosgraph_msgs::Clock>("/clock", 10);
+    if (isClockPub){
+        clock_pub_ = n_.advertise<rosgraph_msgs::Clock>("/clock", 10);
+    }
 
     // advertising reset service
     reset_srv_ = n_.advertiseService("reset_positions", &StageNode::cb_reset_srv, this);
@@ -784,7 +790,9 @@ StageNode::WorldCallback()
     this->base_last_globalpos_time = this->sim_time;
     rosgraph_msgs::Clock clock_msg;
     clock_msg.clock = sim_time;
-    this->clock_pub_.publish(clock_msg);
+    if (isClockPub){
+        this->clock_pub_.publish(clock_msg);
+    }
 }
 
 int 
